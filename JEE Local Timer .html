@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>JEE Local Timer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;600&family=Orbitron:wght@700&family=Space+Mono:wght@700&family=Oswald:wght@500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05080d;--card:#0b1119;--bd:#1b2633;--tx:#e8eef6;--mut:#7d8a9a;--ac:#4aa3ff;--ok:#3ecf8e;--bad:#ff6b6b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f7f9;--card:#fff;--bd:#d9dee5;--tx:#10151c;--mut:#5d6877;--ac:#0b6fd6;--ok:#0f9d63;--bad:#d33}}
+:root[data-theme="dark"]{--bg:#05080d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:13px 'JetBrains Mono',ui-monospace,Menlo,monospace}
+.serif{font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-weight:900}
+nav{display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd);overflow-x:auto}
+nav button,.btn{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:7px 12px;font:inherit;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block}
+nav button.on,.chip.on{border-color:var(--ac);color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,var(--card))}
+main{max-width:760px;margin:0 auto;padding:22px 16px 60px}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.lbl{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+.big{font-size:clamp(56px,16vw,140px);line-height:1.05;margin:26px 0;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat{text-align:right}.stat b{font-size:32px;display:block}
+.play{width:50px;height:50px;border-radius:50%;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:18px;cursor:pointer}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 22px}
+.chip{background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:6px;padding:8px 12px;font:inherit;cursor:pointer;text-align:left}
+.chip small{display:block;color:var(--mut);margin-top:3px}
+input,select,textarea{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:8px;font:inherit;min-width:0}
+input[type=number]{width:80px}.f{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.pri{background:color-mix(in srgb,var(--ac) 15%,var(--card));border-color:var(--ac);color:var(--ac)}
+hr{border:0;border-top:1px solid var(--bd);margin:20px 0}
+.it{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd)}.it span{flex:1}
+.done span{text-decoration:line-through;color:var(--mut)}
+.x{background:none;border:0;color:var(--mut);cursor:pointer;font:inherit}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:14px}
+.card b.serif{font-size:26px}.bar{height:6px;background:var(--bd);border-radius:3px;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.tblw{overflow-x:auto}table{border-collapse:collapse;width:100%}td,th{padding:7px 8px;border-bottom:1px solid var(--bd);text-align:left}th{color:var(--mut);font-weight:400}
+.mut{color:var(--mut)}.ok{color:var(--ok)}.bad{color:var(--bad)}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--card);border:1px solid var(--ac);color:var(--tx);padding:10px 16px;border-radius:8px;opacity:0;transition:.25s;pointer-events:none;z-index:9;white-space:nowrap}#toast.show{opacity:1;transform:translate(-50%,0)}
+#wp,#wpo{position:fixed;inset:0;z-index:-1;pointer-events:none}#wpo{background:var(--bg);opacity:0}
+#clk.seg{display:flex;justify-content:center;align-items:center;gap:.05em}
+#clk{font-family:var(--cf,'Orbitron'),Georgia,serif;font-weight:var(--cw,700)}
+main.wide{max-width:980px}
+.z{text-align:center;font-size:17px}
+.z .big{font-size:clamp(52px,16vw,150px);margin:30px 0}
+.z .lbl{font-size:12px}
+.z .play{width:96px;height:96px;font-size:36px}
+.z .btn,.z .chip,.z input,.z select{font-size:16px;padding:12px 18px}
+.z .chips,.z .f{justify-content:center}
+.z .stat{text-align:center}.z .stat b{font-size:44px}
+.z .bar{height:10px;max-width:640px;margin:0 auto}
+.z input[type=number]{width:100px}.z .chip{text-align:center;min-width:150px}.z .chip small{font-size:14px}
+.z input[type=range]{padding:0;width:200px}
+</style></head><body>
+<div id="wp"></div><div id="wpo"></div>
+<nav id="nav"></nav><main id="m"></main><div id="toast"></div>
+<script>
+const K='jee27',TABS=['Study timer','Todo','Test plan','Practice','Daily'];
+let S={exam:'2027-01-21',subs:['Physics','Chemistry','Mathematics','Test'],cur:'Mathematics',days:{},qlog:[],todos:[],tests:[],notes:{}},tab=0,run=false,last=0;
+try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const td=()=>new Date().toLocaleDateString('en-CA');
+const day=d=>S.days[d]||(S.days[d]={s:0,sub:{}});
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const p2=n=>String(n).padStart(2,'0');
+const hms=s=>`${p2(Math.floor(s/3600))}:${p2(Math.floor(s%3600/60))}:${p2(s%60)}`;
+const hm=s=>`${Math.floor(s/3600)}h ${Math.floor(s%3600/60)}m ${s%60}s`;
+const dd=d=>Math.ceil((new Date(d+'T00:00:00')-new Date(td()+'T00:00:00'))/864e5);
+const dstr=o=>{const d=new Date();d.setDate(d.getDate()-o);return d.toLocaleDateString('en-CA')};
+function streak(){let n=0,o=day(td()).s>=60?0:1;for(;;o++){const d=S.days[dstr(o)];if(d&&d.s>=60)n++;else break}return n}
+function avg(){const k=Object.values(S.days).filter(d=>d.s>=60);return k.length?k.reduce((a,d)=>a+d.s,0)/k.length/3600:0}
+function qstat(sub,from){let d=0,c=0;S.qlog.forEach(q=>{if((!sub||q.sub===sub)&&(!from||q.d>=from)){d+=q.done;c+=q.ok}});return{d,c,a:d?Math.round(c/d*100):0}}
+setInterval(()=>{if(!run)return;const n=Date.now(),e=Math.round((n-last)/1000);if(e<1)return;last=n;const d=day(td());d.s+=e;d.sub[S.cur]=(d.sub[S.cur]||0)+e;fx(e);save();tick()},500);
+const SEG={a:'8,8 12,4 48,4 52,8 48,12 12,12',b:'54,10 58,14 58,44 54,48 50,44 50,14',c:'54,52 58,56 58,86 54,90 50,86 50,56',d:'8,92 12,88 48,88 52,92 48,96 12,96',e:'6,52 10,56 10,86 6,90 2,86 2,56',f:'6,10 10,14 10,44 6,48 2,44 2,14',g:'8,50 12,46 48,46 52,50 48,54 12,54'},MAP={0:'abcdef',1:'bc',2:'abdeg',3:'abcdg',4:'bcfg',5:'acdfg',6:'acdefg',7:'abc',8:'abcdefg',9:'abcdfg'};
+const dig=n=>`<svg viewBox="0 0 60 100" style="height:.8em;width:.48em;transform:skewX(-7deg)">${Object.keys(SEG).map(k=>`<polygon points="${SEG[k]}" fill="currentColor" opacity="${MAP[n].includes(k)?1:.08}"/>`).join('')}</svg>`;
+const COL='<svg viewBox="0 0 20 100" style="height:.8em;width:.16em"><circle cx="10" cy="32" r="5" fill="currentColor"/><circle cx="10" cy="68" r="5" fill="currentColor"/></svg>';
+function setClk(c,t){if(S.cf=='7-Segment'){c.classList.add('seg');if(c.dataset.t!=t){c.dataset.t=t;c.innerHTML=[...t].map(ch=>ch==':'?COL:dig(ch)).join('')}}else{c.classList.remove('seg');c.dataset.t='';c.textContent=t}}
+function tick(){const c=document.getElementById('clk');if(!c)return;const d=day(td());setClk(c,hms(d.s));document.querySelectorAll('[data-s]').forEach(e=>e.querySelector('small').textContent=hm(d.sub[e.dataset.s]||0));const g=document.getElementById('gb');if(g)g.style.width=Math.min(100,d.s/3600/(S.goal||10)*100)+'%';const a=document.getElementById('avg');if(a)a.textContent=avg().toFixed(1)}
+function nav(){document.getElementById('nav').innerHTML=TABS.map((t,i)=>`<button class="${i==tab?'on':''}" onclick="tab=${i};go()">${t}</button>`).join('')+`<span class="lbl" style="margin-left:auto;align-self:center;white-space:nowrap">Lv ${lv()} · ${Math.round(S.xp||0)} XP</span>`}
+function go(){nav();const m=document.getElementById('m');m.className=tab==0?'wide':'';m.innerHTML=[vClock,vTodo,vTests,vPrac,vDaily][tab]();tick()}
+function dlg(msg,opt,cb){const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:99;padding:16px';
+o.innerHTML=`<div class="card" style="max-width:380px;width:100%"><div style="margin-bottom:12px">${esc(msg)}</div>${opt?`<input id="dlgi" style="width:100%;margin-bottom:12px" value="${esc(opt.def||'')}">`:''}<div class="f" style="justify-content:flex-end;margin:0"><button class="btn" id="dn">Cancel</button><button class="btn pri" id="dy">OK</button></div></div>`;
+document.body.appendChild(o);const i=o.querySelector('#dlgi');if(i){i.focus();i.select()}
+const close=v=>{o.remove();if(v!==null)cb(v)};o.querySelector('#dn').onclick=()=>close(null);o.querySelector('#dy').onclick=()=>close(i?i.value:true);o.onclick=e=>{if(e.target===o)close(null)};if(i)i.onkeydown=e=>{if(e.key=='Enter')close(i.value)}}
+const askC=(m,cb)=>dlg(m,null,cb),askP=(m,d,cb)=>dlg(m,{def:d},cb);
+function logForm(){return `<div class="f"><select id="qs">${S.subs.filter(s=>s!='Test').map(s=>`<option>${esc(s)}</option>`).join('')}</select><input id="qch" placeholder="chapter (optional)" style="width:150px"><input type="number" id="qd" placeholder="done" min="0"><input type="number" id="qc" placeholder="correct" min="0"><button class="btn pri" onclick="addQ()">add</button><button class="btn" onclick="S.qlog.pop();save();go()">undo last</button></div>`}
+function addQ(){const d=+qd.value,c=+qc.value;if(!(d>0)||c<0||c>d){toast('Enter done > 0 and 0 ≤ correct ≤ done');return}S.qlog.push({d:td(),sub:qs.value,ch:qch.value.trim(),done:d,ok:c});addXP(Math.round(c+(d-c)*.5),true);save();go()}
+const PRE=['linear-gradient(135deg,#0f2027,#2c5364)','linear-gradient(135deg,#232526,#414345)','linear-gradient(135deg,#42275a,#734b6d)','linear-gradient(135deg,#134e5e,#71b280)','linear-gradient(135deg,#200122,#6f0000)','linear-gradient(135deg,#000428,#004e92)'];
+function applyWp(){const w=S.wp||{},a=document.getElementById('wp'),o=document.getElementById('wpo');if(!w.v){a.style.background='none';o.style.opacity=0;return}a.style.background=w.type=='img'?`center/cover no-repeat url("${w.v}")`:w.v;o.style.opacity=(w.dim??50)/100}
+function setWp(t,v){S.wp=Object.assign({dim:50},S.wp,{type:t,v});save();applyWp();go()}
+function wpFile(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1280/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);const u=c.toDataURL('image/jpeg',.7),old=S.wp;S.wp=Object.assign({dim:50},old,{type:'img',v:u});try{localStorage.setItem(K,JSON.stringify(S))}catch(e){S.wp=old;toast('Image too large, try another');return}applyWp();go()};im.src=r.result};r.readAsDataURL(f)}
+const FONTS=[['Orbitron',700],['Space Mono',700],['Oswald',500],['Bebas Neue',400],['JetBrains Mono',600],['Playfair Display',900],['7-Segment',400]];
+function applyFont(){const f=FONTS.find(x=>x[0]==S.cf)||FONTS[0],r=document.documentElement.style;r.setProperty('--cf',`'${f[0]}'`);r.setProperty('--cw',f[1])}
+function setFont(v){S.cf=v;save();applyFont();tick()}
+function wpCtl(){const w=S.wp||{};return `<div class="f"><label class="btn">📁 Upload image<input type="file" accept="image/*" hidden onchange="wpFile(this)"></label><label class="btn">🎨 Colour<input type="color" value="#0b1119" hidden onchange="setWp('grad',this.value)"></label><button class="btn" onclick="S.wp=null;save();applyWp();go()">Remove</button></div><div class="f">${PRE.map((g,i)=>`<button class="btn" title="Preset ${i+1}" style="width:56px;height:40px;padding:0;background:${g}" onclick="setWp('grad',PRE[${i}])"></button>`).join('')}</div>${w.v?`<div class="mut">Dim <input type="range" min="0" max="90" value="${w.dim??50}" oninput="S.wp.dim=+this.value;save();applyWp()"></div>`:''}`}
+function vClock(){const t=qstat(null,td());
+const n=dd(S.exam);return `<div class="z"><div style="display:flex;justify-content:flex-end"><div class="card" style="text-align:center;padding:10px 18px"><div class="lbl">Days left</div><b class="serif" style="font-size:40px;line-height:1.1">${n>0?n:n==0?'Today':'—'}</b></div></div><div class="f" style="gap:48px;align-items:flex-end;margin:0"><div><div class="lbl">Exam date</div><input type="date" value="${S.exam}" style="margin-top:8px" onchange="setExam(this.value)"></div><div class="stat"><div class="lbl">Streak</div><b class="serif">🔥 ${streak()} <small class="lbl">days</small></b></div><div class="stat"><div class="lbl">Avg study / day</div><b class="serif"><span id="avg">0</span> <small class="lbl">hours</small></b></div></div>
+<div class="big serif" id="clk">00:00:00</div><div class="bar" title="Daily goal"><i id="gb" style="background:var(--ac)"></i></div>
+<div class="f" style="align-items:center;gap:20px;margin:28px 0"><button class="play" onclick="toggle()">${run?'❚❚':'▶'}</button><button class="x" style="font-size:15px" onclick="askC('Reset today?',()=>{S.days[td()]={s:0,sub:{}};save();go()})">reset today</button></div>
+<hr><div class="lbl">Subject</div><div class="chips">${S.subs.map(s=>`<button class="chip ${s==S.cur&&!rmMode?'on':''}" ${rmMode?'style="border-color:var(--bad)"':''} data-s="${esc(s)}" onclick="rmMode?rmSub(this.dataset.s):(S.cur=this.dataset.s,save(),go())">${rmMode?'✕ ':''}${esc(s)}<small></small></button>`).join('')}${rmMode?'':'<button class="chip" style="min-width:0" title="Add subject" onclick="addSub()">+</button>'}<button class="chip" style="min-width:0" title="${rmMode?'Done':'Remove subject'}" onclick="rmMode=!rmMode;go()">${rmMode?'done':'−'}</button></div>
+<hr><div class="lbl">Questions</div>${logForm()}<div class="mut">Today: ${t.d} done · ${t.c} correct${t.d?` · ${t.a}%`:''}</div>
+<hr><div class="lbl">Wallpaper</div>${wpCtl()}<hr><div class="lbl">Timer font</div><div class="f"><select onchange="setFont(this.value)">${FONTS.map(f=>`<option ${f[0]==(S.cf||'Orbitron')?'selected':''}>${f[0]}</option>`).join('')}</select></div></div>`}
+function toggle(){run=!run;last=Date.now();fs=0;fi=0;go()}
+function setExam(v){if(v){S.exam=v;save();go()}}
+let rmMode=false;
+function rmSub(n){if(S.subs.length<=1){toast('Keep at least one subject');return}askC('Remove '+n+'? Your logged time and questions stay in your history.',()=>{S.subs=S.subs.filter(x=>x!=n);if(S.cur==n)S.cur=S.subs.find(x=>x!='Test')||S.subs[0];save();go()})}
+function addSub(){askP('New subject name','',v=>{v=v.trim();if(v&&!S.subs.includes(v)){S.subs.push(v);save();go()}})}
+let fs=0,fi=0;const MS=[[25,15],[50,30],[90,60]];
+const lv=()=>Math.floor(Math.sqrt((S.xp||0)/60))+1;
+function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),3200)}
+function addXP(n,q){if(n<=0)return;const a=lv();S.xp=(S.xp||0)+n;if(lv()>a)toast('⭐ Level up! You are Lv '+lv());else if(q)toast('+'+n+' XP');nav()}
+function fx(e){fs+=e;S.xs=(S.xs||0)+e;while(S.xs>=60){S.xs-=60;addXP(1)}
+while(fi<MS.length&&fs>=MS[fi][0]*60){toast('🔥 '+MS[fi][0]+' min focus streak! +'+MS[fi][1]+' XP');addXP(MS[fi][1]);fi++}
+if(S.goal&&day(td()).s>=S.goal*3600&&S.gd!==td()){S.gd=td();addXP(50);toast('🎯 Daily goal hit! +50 XP')}}
+const SUBS=()=>S.subs.filter(s=>s!='Test'),PRI={H:0,M:1,L:2},KINDS={'JEE Main mock':300,'JEE Adv mock':360,'Chapter test':100,'PYQ paper':300};
+const tot=t=>{const a=[t.p,t.c,t.m].filter(v=>v!==''&&v!==undefined&&v!==null);return a.length?a.reduce((x,y)=>x+ +y,0):(t.tot!==undefined&&t.tot!==''?+t.tot:null)};
+function normalize(){S.goal=S.goal||10;S.todos.forEach(t=>{t.pri=t.pri||'M';t.sub=t.sub||'';t.ch=t.ch||'';t.due=t.due||'';if(t.rep&&t.x&&t.doneOn!==td())t.x=false});S.tests.forEach(t=>{if(t.kind===undefined){t.kind='JEE Main mock';t.p=t.p||'';t.c=t.c||'';t.m=t.m||'';if(t.sc!==''&&t.sc!==undefined)t.tot=+t.sc}});save()}
+function weakCh(){const m={};S.qlog.forEach(q=>{if(!q.ch)return;const k=q.sub+'|'+q.ch,o=m[k]||(m[k]={sub:q.sub,ch:q.ch,d:0,c:0});o.d+=q.done;o.c+=q.ok});return Object.values(m).filter(o=>o.d>=10).map(o=>({...o,a:Math.round(o.c/o.d*100)})).sort((a,b)=>a.a-b.a)}
+function weak(){const m={};S.tests.forEach(t=>[['p','Physics'],['c','Chemistry'],['m','Mathematics']].forEach(([k,n])=>{if(t[k]!==''&&t[k]!==undefined&&t.mx)(m[n]=m[n]||[]).push(+t[k]/(t.kind=='JEE Adv mock'?120:t.kind=='Chapter test'?100:100))}));let w=null,b=9;Object.keys(m).forEach(n=>{const a=m[n].reduce((x,y)=>x+y,0)/m[n].length;if(a<b){b=a;w=n}});if(!w){let q2=101;SUBS().forEach(n=>{const q=qstat(n);if(q.d>=10&&q.a<q2){q2=q.a;w=n}})}return w}
+let tf='All';
+function vTodo(){const T=td(),L=S.todos.map((t,i)=>({...t,i}));
+const fl=L.filter(t=>tf=='All'||(tf=='Today'&&(!t.due||t.due<=T))||(tf=='Overdue'&&t.due&&t.due<T&&!t.x)||t.sub==tf).sort((a,b)=>(a.x-b.x)||((a.due||'9')>(b.due||'9')?1:(a.due||'9')<(b.due||'9')?-1:0)||PRI[a.pri]-PRI[b.pri]);
+const tt=L.filter(t=>!t.due||t.due<=T),dn=tt.filter(t=>t.x).length,rem=tt.filter(t=>!t.x).reduce((a,t)=>a+(+t.min||0),0);
+return `<div class="row"><div class="lbl">Todo · ${dn}/${tt.length} done today · ${rem} min left</div><button class="btn pri" onclick="planToday()">✨ Plan today</button></div><div class="bar"><i style="width:${tt.length?dn/tt.length*100:0}%"></i></div>
+<div class="f" style="margin-top:14px"><input id="ti" placeholder="Task (e.g. Solve 30 PYQs)" style="flex:1 1 220px" onkeydown="if(event.key=='Enter')addT()"><select id="ts"><option value="">General</option>${SUBS().map(s=>`<option>${esc(s)}</option>`).join('')}</select><input id="tc" placeholder="Chapter" style="width:130px"><select id="tp"><option value="H">High</option><option value="M" selected>Med</option><option value="L">Low</option></select><input type="date" id="td_" value="${T}"><input type="number" id="tm" placeholder="min"><label class="mut"><input type="checkbox" id="tr"> daily</label><button class="btn pri" onclick="addT()">add</button></div>
+<div class="chips">${['All','Today','Overdue',...SUBS()].map(c=>`<button class="chip ${c==tf?'on':''}" onclick="tf=this.textContent;go()">${esc(c)}</button>`).join('')}</div>
+${fl.map(t=>`<div class="it ${t.x?'done':''}"><input type="checkbox" ${t.x?'checked':''} onchange="chk(${t.i},this.checked)"><span>${esc(t.t)}<br><small class="mut">${[t.sub,t.ch,t.min?t.min+'m':'',t.rep?'daily':''].filter(Boolean).map(esc).join(' · ')}</small></span><b class="${t.pri=='H'?'bad':'mut'}">${t.pri}</b><small class="${t.due&&t.due<T&&!t.x?'bad':'mut'}">${t.due?(t.due==T?'today':t.due):''}</small><button class="x" onclick="S.todos.splice(${t.i},1);save();go()">✕</button></div>`).join('')||'<p class="mut">Nothing here. Try ✨ Plan today.</p>'}
+${S.todos.some(t=>t.x&&!t.rep)?'<div class="f"><button class="btn" onclick="S.todos=S.todos.filter(t=>!t.x||t.rep);save();go()">clear completed</button></div>':''}`}
+function chk(i,v){const t=S.todos[i];t.x=v;t.doneOn=v?td():undefined;if(v&&t.rw!==td()){t.rw=td();addXP(10+(t.pri=='H'?10:0),true)}save();go()}
+function addT(){if(!ti.value.trim())return;S.todos.push({t:ti.value.trim(),sub:ts.value,ch:tc.value.trim(),pri:tp.value,due:td_.value,min:+tm.value||0,rep:tr.checked,x:false});save();go()}
+function planToday(){const T=td(),w=weak(),wc=weakCh()[0],add=[];
+SUBS().forEach(s=>add.push({t:'Solve 20 PYQs',sub:s,min:60,pri:s==w?'H':'M'}));
+add.push(wc?{t:`Fix weak chapter (${wc.a}% accuracy): 30 PYQs`,sub:wc.sub,ch:wc.ch,min:75,pri:'H'}:{t:'Weak-area drill: 30 PYQs',sub:w||'',min:75,pri:'H'});
+add.push({t:'Revise formula sheet / short notes',sub:'',min:30,pri:'M'});
+S.tests.filter(t=>t.date==T&&tot(t)===null).forEach(t=>add.push({t:'Attempt: '+t.name,sub:'',min:180,pri:'H'}));
+S.tests.filter(t=>t.date<T&&t.date>=dstr(7)&&tot(t)!==null&&!t.an).forEach(t=>add.push({t:'Analyse mistakes: '+t.name,sub:'',min:45,pri:'H'}));
+add.forEach(a=>{if(!S.todos.some(x=>x.t==a.t&&x.sub==(a.sub||'')&&x.due==T))S.todos.push({ch:'',...a,sub:a.sub||'',due:T,x:false})});save();tf='Today';go()}
+function drill(i){const o=weakCh()[i];S.todos.push({t:`Fix ${o.ch} (${o.a}% accuracy): 30 PYQs`,sub:o.sub,ch:o.ch,pri:'H',due:td(),min:60,x:false});save();tab=1;go()}
+function clearTests(){if(!S.tests.length){toast('No tests to clear');return}askC('Clear ALL tests and results? This cannot be undone.',()=>{S.tests=[];save();go()})}
+function scoreChart(a,pc){const n=a.length,W=600,H=210,L=36,R=12,T=12,B=26,X=i=>n>1?L+i*(W-L-R)/(n-1):(L+W-R)/2,Y=v=>T+(H-T-B)*(1-v/100),
+SL=[['p','Physics','#ff9f43'],['c','Chemistry','#c77dff'],['m','Mathematics','#3ecf8e']],
+sv=(t,k)=>{const v=t[k];return v===''||v===undefined||v===null||t.kind=='Chapter test'||!t.mx?null:Math.max(0,Math.round(+v/(t.mx/3)*100))},
+path=f=>{let d='',on=false;a.forEach((t,i)=>{const v=f(t);if(v===null){on=false;return}d+=(on?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';on=true});return d},
+lbs=n?[0,...(n>2?[Math.floor((n-1)/2)]:[]),...(n>1?[n-1]:[])]:[];
+return `<div class="tblw"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:420px;height:auto;display:block;margin:8px 0 6px">
+${[0,50,100].map(v=>`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--bd)"/><text x="${L-6}" y="${Y(v)+3}" text-anchor="end" font-size="10" fill="var(--mut)">${v}%</text>`).join('')}
+<line x1="${L}" x2="${W-R}" y1="${Y(60)}" y2="${Y(60)}" stroke="var(--ok)" stroke-dasharray="4 4" opacity=".7"/><text x="${W-R}" y="${Y(60)-4}" text-anchor="end" font-size="10" fill="var(--ok)">60%</text>
+${n?`${SL.map(([k,,c])=>`<path d="${path(t=>sv(t,k))}" fill="none" stroke="${c}" stroke-width="1.8" opacity=".85" stroke-linejoin="round"/>${a.map((t,i)=>{const v=sv(t,k);return v===null?'':`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="2.8" fill="${c}"><title>${esc(t.name)} · ${k=='p'?'Physics':k=='c'?'Chemistry':'Maths'}: ${v}%</title></circle>`}).join('')}`).join('')}
+${n>1?`<path d="${path(pc)} L${X(n-1)} ${Y(0)} L${X(0)} ${Y(0)} Z" fill="var(--ac)" opacity=".1"/>`:''}<path d="${path(pc)}" fill="none" stroke="var(--ac)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+${a.map((t,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(pc(t)).toFixed(1)}" r="4.5" fill="${pc(t)>=60?'var(--ok)':'var(--bad)'}"><title>${esc(t.name)} (${t.date}): ${pc(t)}%</title></circle>`).join('')}
+${lbs.map((i,j)=>`<text x="${X(i)}" y="${H-8}" text-anchor="${n<2?'middle':j==0?'start':i==n-1?'end':'middle'}" font-size="10" fill="var(--mut)">${a[i].date.slice(5)}</text>`).join('')}`:`<text x="${(L+W-R)/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="var(--mut)">No results yet. Tap "+ enter result" on a test below.</text>`}</svg></div>
+<div class="mut" style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;margin-bottom:16px"><span><i style="display:inline-block;width:12px;height:3px;background:var(--ac);vertical-align:middle"></i> Overall</span>${SL.map(([k,nm,c])=>`<span><i style="display:inline-block;width:12px;height:3px;background:${c};vertical-align:middle"></i> ${nm}</span>`).join('')}</div>`}
+function vTests(){const T=td(),L=S.tests.map((t,i)=>({...t,i,tt:tot(t)})).sort((a,b)=>a.date<b.date?-1:1),sc=L.filter(t=>t.tt!==null&&t.mx),pc=t=>Math.round(t.tt/t.mx*100),w=sc.length?weak():null;
+const av=sc.length?Math.round(sc.reduce((a,t)=>a+pc(t),0)/sc.length):0,bs=sc.length?Math.max(...sc.map(pc)):0,nx=L.find(t=>t.date>=T&&t.tt===null);
+return `<div class="row"><div class="lbl">Test plan</div><div class="f" style="margin:0"><button class="btn" onclick="clearTests()" style="color:var(--bad)">🗑 Clear all</button></div></div>
+<div class="grid" style="margin:12px 0"><div class="card"><div class="lbl">Taken</div><b class="serif">${sc.length}</b></div><div class="card"><div class="lbl">Average</div><b class="serif">${av}%</b></div><div class="card"><div class="lbl">Best</div><b class="serif">${bs}%</b></div><div class="card"><div class="lbl">Next</div><b class="serif" style="font-size:16px">${nx?esc(nx.name)+' · '+(dd(nx.date)?'in '+dd(nx.date)+'d':'today'):'—'}</b></div></div>
+<div class="lbl">Score trend (last 20)${w?` · weakest: <span class="bad">${esc(w)}</span>`:''}</div>${scoreChart(sc.slice(-20),pc)}
+<div class="f"><input id="tn" placeholder="Test name" style="flex:1 1 170px"><input type="date" id="tdt"><select id="tk" onchange="tmx.value=KINDS[this.value]">${Object.keys(KINDS).map(k=>`<option>${k}</option>`).join('')}</select><input type="number" id="tmx" value="300" title="max marks"><input type="number" id="tmin" placeholder="mins"><button class="btn pri" onclick="addTest()">add</button></div>
+<div class="tblw"><table><tr><th>Date</th><th>Test</th><th>When</th><th>Result</th><th></th></tr>${L.map(t=>{const n=dd(t.date);return `<tr><td>${t.date}</td><td>${esc(t.name)}<br><small class="mut">${esc(t.kind||'')}${t.mins?' · '+t.mins+'m':''}</small></td><td class="mut">${n>0?'in '+n+'d':n==0?'today':Math.abs(n)+'d ago'}</td><td>${t.tt!==null&&t.mx?`<span class="${pc(t)>=60?'ok':'bad'}">${t.tt}/${t.mx} (${pc(t)}%)</span><br><small class="mut">P ${t.p??'–'} · C ${t.c??'–'} · M ${t.m??'–'}</small>`:`<button class="x" onclick="res(${t.i})">+ enter result</button>`}</td><td>${t.tt!==null?`<button class="x" onclick="S.tests[${t.i}].an=!S.tests[${t.i}].an;save();go()">${t.an?'✓ analysed':'mark analysed'}</button>`:''}<button class="x" onclick="S.tests.splice(${t.i},1);save();go()">✕</button></td></tr>`}).join('')}</table></div>${L.length?'':'<p class="mut">No tests yet. Add one above.</p>'}`}
+function addTest(){if(!tn.value.trim()||!tdt.value){toast('Name and date needed');return}S.tests.push({name:tn.value.trim(),date:tdt.value,kind:tk.value,mx:+tmx.value||300,mins:tmin.value,p:'',c:'',m:''});save();go()}
+function res(i){askP('Marks as Physics, Chemistry, Maths (blank if n/a), e.g. 62, 48, 71','',v=>{const a=v.split(',').map(x=>x.trim()===''?'':+x);if(a.some(x=>x!==''&&isNaN(x))){toast('Numbers only');return}Object.assign(S.tests[i],{p:a[0]??'',c:a[1]??'',m:a[2]??''});delete S.tests[i].tot;save();go()})}
+function autoSched(){const lim=new Date(new Date(S.exam+'T00:00:00')-7*864e5).toLocaleDateString('en-CA'),sb=SUBS(),has=(d,n)=>S.tests.some(t=>t.date==d&&t.name==n);let d=new Date(td()+'T00:00:00'),mi=S.tests.filter(t=>t.kind=='JEE Main mock').length,k=0,n=0;
+for(let g=0;g<400&&n<30;g++){d.setDate(d.getDate()+1);const ds=d.toLocaleDateString('en-CA');if(ds>lim)break;const wd=d.getDay();let t=null;
+if(wd==0){mi++;t={name:'Full mock #'+mi,kind:'JEE Main mock',mx:300,mins:180}}else if(wd==3){t={name:sb[k++%sb.length]+' chapter test',kind:'Chapter test',mx:100,mins:60}}
+if(t&&!has(ds,t.name)){S.tests.push({...t,date:ds,p:'',c:'',m:''});n++}}
+save();go()}
+function vPrac(){const a=qstat(),w=weakCh().slice(0,5);
+return `<div class="lbl">Practice</div>
+${logForm()}<hr><div class="grid">${SUBS().map(s=>{const q=qstat(s);return `<div class="card"><div class="lbl">${esc(s)}</div><b class="serif">${q.a}%</b><div class="mut">${q.c}/${q.d} correct</div><div class="bar"><i style="width:${q.a}%"></i></div></div>`}).join('')}</div>
+<hr><div class="lbl">Weakest chapters (≥10 attempts)</div>${w.map((o,i)=>`<div class="it"><span>${esc(o.sub)} · ${esc(o.ch)}</span><b class="${o.a<60?'bad':'mut'}">${o.a}%</b><button class="btn" onclick="drill(${i})">+ todo</button></div>`).join('')||'<p class="mut">Log sessions with a chapter name and the weakest ones show up here.</p>'}
+<hr><div class="lbl">Overall · ${a.d} questions · ${a.a}%</div>${S.qlog.slice(-8).reverse().map(q=>`<div class="it"><span>${q.d} · ${esc(q.sub)}${q.ch?' · '+esc(q.ch):''}</span><span class="mut" style="flex:none">${q.ok}/${q.done}</span></div>`).join('')}`}
+function lineChart(g){const n=30,pts=[];for(let i=n-1;i>=0;i--){const d=dstr(i);pts.push({d,h:(S.days[d]?S.days[d].s:0)/3600})}
+const W=600,H=220,L=34,R=10,T=12,B=26,mx=Math.max(g,...pts.map(p=>p.h),1),X=i=>L+i*(W-L-R)/(n-1),Y=h=>T+(H-T-B)*(1-h/mx),
+ln=pts.map((p,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(p.h).toFixed(1)).join(' '),ar=ln+` L${X(n-1)} ${H-B} L${X(0)} ${H-B} Z`,
+lb=i=>pts[i].d.slice(5);
+return `<div class="tblw"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:420px;height:auto;display:block;margin:8px 0 18px">
+<line x1="${L}" x2="${W-R}" y1="${Y(g)}" y2="${Y(g)}" stroke="var(--ok)" stroke-dasharray="4 4" opacity=".7"/><text x="${W-R}" y="${Y(g)-4}" text-anchor="end" font-size="10" fill="var(--ok)">goal ${g}h</text>
+<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--bd)"/><text x="${L-6}" y="${H-B+3}" text-anchor="end" font-size="10" fill="var(--mut)">0</text><text x="${L-6}" y="${T+8}" text-anchor="end" font-size="10" fill="var(--mut)">${mx.toFixed(0)}h</text>
+<path d="${ar}" fill="var(--ac)" opacity=".12"/><path d="${ln}" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+${pts.map((p,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(p.h).toFixed(1)}" r="${p.h?3.5:2}" fill="${p.h>=g?'var(--ok)':'var(--ac)'}" opacity="${p.h?1:.35}"><title>${p.d}: ${p.h.toFixed(1)}h</title></circle>`).join('')}
+<text x="${L}" y="${H-8}" font-size="10" fill="var(--mut)">${lb(0)}</text><text x="${X(14)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--mut)">${lb(14)}</text><text x="${W-R}" y="${H-8}" text-anchor="end" font-size="10" fill="var(--mut)">${lb(n-1)}</text></svg></div>`}
+function vDaily(){const rows=[];for(let o=0;o<14;o++){const d=dstr(o),x=S.days[d]||{s:0,sub:{}},qq=S.qlog.filter(l=>l.d==d),dn=qq.reduce((a,l)=>a+l.done,0),ck=qq.reduce((a,l)=>a+l.ok,0);rows.push({d,h:x.s/3600,sub:x.sub||{},dn,a:dn?Math.round(ck/dn*100):null,ck})}
+const wk=rows.slice(0,7),wh=wk.reduce((a,r)=>a+r.h,0),wd=wk.reduce((a,r)=>a+r.dn,0),wc=wk.reduce((a,r)=>a+r.ck,0),g=S.goal||10,mx=Math.max(g,...rows.map(r=>r.h)),sp={};
+wk.forEach(r=>Object.entries(r.sub).forEach(([k,v])=>sp[k]=(sp[k]||0)+v));const st=Object.values(sp).reduce((a,b)=>a+b,0)||1,tw=S.tests.filter(t=>t.date<=td()&&t.date>=dstr(6)&&tot(t)!==null).length;
+return `<div class="row"><div class="lbl">Daily · last 14 days</div><label class="mut">goal <input type="number" value="${g}" style="width:60px" onchange="S.goal=+this.value||10;save();go()"> h/day</label></div>
+<div class="grid" style="margin:12px 0"><div class="card"><div class="lbl">Today</div><b class="serif">${rows[0].h.toFixed(1)}h</b><div class="bar"><i style="width:${Math.min(100,rows[0].h/g*100)}%;background:var(--ac)"></i></div></div><div class="card"><div class="lbl">This week</div><b class="serif">${wh.toFixed(1)}h</b><div class="mut">avg ${(wh/7).toFixed(1)}h/day</div></div><div class="card"><div class="lbl">Questions (7d)</div><b class="serif">${wd}</b><div class="mut">${wd?Math.round(wc/wd*100):0}% accuracy</div></div><div class="card"><div class="lbl">Tests (7d)</div><b class="serif">${tw}</b><div class="mut">${wk.filter(r=>r.h>=g).length}/7 goal days</div></div></div>
+<div class="lbl">Subject split (7d)</div>${Object.entries(sp).map(([k,v])=>`<div class="it"><span>${esc(k)}</span><span class="mut" style="flex:none">${(v/3600).toFixed(1)}h · ${Math.round(v/st*100)}%</span></div>`).join('')||'<p class="mut">Run the study timer to see this.</p>'}
+<div class="lbl" style="margin-top:18px">Study hours · last 30 days</div>${lineChart(g)}
+<div class="tblw"><table><tr><th>Date</th><th>Hours</th><th>Questions</th><th>Accuracy</th><th>Goal</th></tr>${rows.map(r=>`<tr><td>${r.d}</td><td>${r.h.toFixed(1)}</td><td>${r.dn}</td><td>${r.a===null?'—':r.a+'%'}</td><td>${r.h>=g?'<span class="ok">✓</span>':'<span class="mut">·</span>'}</td></tr>`).join('')}</table></div>
+<hr><div class="lbl">Today's note</div><textarea id="nt" rows="4" style="width:100%;margin-top:8px" placeholder="What went well? What to fix tomorrow?" oninput="S.notes[td()]=this.value;save()">${esc(S.notes[td()]||'')}</textarea>`}
+let ld=td();setInterval(()=>{if(td()!==ld){ld=td();normalize();go()}},30000);
+normalize();applyWp();applyFont();go();
+</script></body></html>
