@@ -68,7 +68,7 @@ const dstr=o=>{const d=new Date();d.setDate(d.getDate()-o);return d.toLocaleDate
 function streak(){let n=0,o=day(td()).s>=60?0:1;for(;;o++){const d=S.days[dstr(o)];if(d&&d.s>=60)n++;else break}return n}
 function avg(){const k=Object.values(S.days).filter(d=>d.s>=60);return k.length?k.reduce((a,d)=>a+d.s,0)/k.length/3600:0}
 function qstat(sub,from){let d=0,c=0;S.qlog.forEach(q=>{if((!sub||q.sub===sub)&&(!from||q.d>=from)){d+=q.done;c+=q.ok}});return{d,c,a:d?Math.round(c/d*100):0}}
-setInterval(()=>{if(!run)return;const n=Date.now(),e=Math.round((n-last)/1000);if(e<1)return;last=n;const d=day(td());d.s+=e;d.sub[S.cur]=(d.sub[S.cur]||0)+e;fx(e);save();tick()},500);
+setInterval(()=>{if(!run)return;const n=Date.now(),e=Math.floor((n-last)/1000);if(e<1)return;last+=e*1000;const d=day(td());d.s+=e;d.sub[S.cur]=(d.sub[S.cur]||0)+e;fx(e);save();tick()},500);
 const SEG={a:'8,8 12,4 48,4 52,8 48,12 12,12',b:'54,10 58,14 58,44 54,48 50,44 50,14',c:'54,52 58,56 58,86 54,90 50,86 50,56',d:'8,92 12,88 48,88 52,92 48,96 12,96',e:'6,52 10,56 10,86 6,90 2,86 2,56',f:'6,10 10,14 10,44 6,48 2,44 2,14',g:'8,50 12,46 48,46 52,50 48,54 12,54'},MAP={0:'abcdef',1:'bc',2:'abdeg',3:'abcdg',4:'bcfg',5:'acdfg',6:'acdefg',7:'abc',8:'abcdefg',9:'abcdfg'};
 const dig=n=>`<svg viewBox="0 0 60 100" style="height:.8em;width:.48em;transform:skewX(-7deg)">${Object.keys(SEG).map(k=>`<polygon points="${SEG[k]}" fill="currentColor" opacity="${MAP[n].includes(k)?1:.08}"/>`).join('')}</svg>`;
 const COL='<svg viewBox="0 0 20 100" style="height:.8em;width:.16em"><circle cx="10" cy="32" r="5" fill="currentColor"/><circle cx="10" cy="68" r="5" fill="currentColor"/></svg>';
